@@ -6,7 +6,7 @@ import { Upload } from 'lucide-react'
 
 interface ImagePanelProps {
     currentImage: string | null
-    onImageUploaded: (imageUrl: string, prompt: string) => void
+    onImageUploaded: (encodedImage: string, event: 'upload' | 'replace') => void
 }
 
 export default function ImagePanel({ currentImage, onImageUploaded }: ImagePanelProps) {
@@ -27,38 +27,54 @@ export default function ImagePanel({ currentImage, onImageUploaded }: ImagePanel
         if (!file) return
 
         setIsUploading(true)
-        // Here you would typically upload the file to your server or a cloud storage service
-        // For this example, we'll just create a local URL
-        const imageUrl = URL.createObjectURL(file)
-        onImageUploaded(imageUrl, 'Uploaded image')
-        setIsUploading(false)
+
+        try {
+            const reader = new FileReader()
+            reader.readAsDataURL(file)
+            reader.onload = () => {
+                if (typeof reader.result === 'string') {
+                    // Extract just the base64 part by removing the data URL prefix
+                    const base64String = reader.result.split(',')[1]
+                    const event = currentImage ? 'replace' : 'upload'
+                    onImageUploaded(base64String, event)
+                    setIsUploading(false)
+                }
+            }
+            reader.onerror = (error) => {
+                console.error('Error reading file:', error)
+                setIsUploading(false)
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error)
+            setIsUploading(false)
+            return
+        }
     }
 
     return (
-        <div className="flex-1 p-4 flex items-center justify-center bg-white rounded-lg shadow-lg m-4">
-            {currentImage ? (
+        <div className="flex-1 p-4 flex flex-col items-center justify-center bg-white rounded-lg shadow-lg m-4">
+            {currentImage && (
                 <img
                     src={formatBase64Image(currentImage)}
                     alt="Current"
-                    className="max-w-full max-h-full object-contain"
+                    className="max-w-full max-h-[80%] object-contain mb-4"
                 />
-            ) : (
-                <div className="text-center">
-                    <Button disabled={isUploading}>
-                        <label className="cursor-pointer flex items-center">
-                            <Upload className="mr-2" />
-                            {isUploading ? 'Uploading...' : 'Upload Image'}
-                            <input
-                                type="file"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                disabled={isUploading}
-                            />
-                        </label>
-                    </Button>
-                </div>
             )}
+            <div className="text-center">
+                <Button disabled={isUploading}>
+                    <label className="cursor-pointer flex items-center">
+                        <Upload className="mr-2" />
+                        {isUploading ? 'Uploading...' : (currentImage ? 'Replace Image' : 'Upload Image')}
+                        <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={isUploading}
+                        />
+                    </label>
+                </Button>
+            </div>
         </div>
     )
 }

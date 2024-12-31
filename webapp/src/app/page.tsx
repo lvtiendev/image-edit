@@ -10,6 +10,16 @@ export default function AIImageEditor() {
   const [currentImage, setCurrentImage] = useState<string | null>(null)
   const [imageHistory, setImageHistory] = useState<HistoryItem[]>([])
 
+  const handleImageUploaded = (imageEncoded: string, event: 'upload' | 'replace') => {
+    setCurrentImage(imageEncoded)
+    setImageHistory(prev => [...prev, {
+      image: imageEncoded,
+      prompt: event == 'upload' ? 'Uploaded image' : 'Replaced image',
+      type: event,
+      timestamp: Date.now()
+    }])
+  }
+
   const handleImageGenerated = (imageEncoded: string, prompt: string) => {
     setCurrentImage(imageEncoded)
     setImageHistory(prev => [...prev, {
@@ -39,7 +49,7 @@ export default function AIImageEditor() {
       <div className="flex-1 flex flex-col">
         <ImagePanel
           currentImage={currentImage}
-          onImageUploaded={handleImageGenerated}
+          onImageUploaded={handleImageUploaded}
         />
         <HistoryPanel
           history={imageHistory}
