@@ -16,7 +16,7 @@ const API_URL = 'http://localhost:8000' // Add this to your env variables in pro
 
 export default function ChatPanel({ onImageGenerated, onImageEdited, currentImage }: ChatPanelProps) {
     const [isGenerating, setIsGenerating] = useState(false)
-    const { messages, input, handleInputChange, handleSubmit, setMessages } = useChat()
+    const { messages, input, handleInputChange, setMessages } = useChat()
 
     const handleGenerateImage = async (prompt: string) => {
         setIsGenerating(true)

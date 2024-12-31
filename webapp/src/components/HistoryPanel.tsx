@@ -17,7 +17,7 @@ export default function HistoryPanel({ history, onSelect }: HistoryPanelProps) {
         <div className="h-1/3 p-4 bg-white rounded-lg shadow-lg m-4 overflow-auto">
             <h2 className="text-lg font-semibold mb-4">History</h2>
             <div className="space-y-4">
-                {history.map((item, index) => (
+                {history.map((item) => (
                     <div
                         key={item.timestamp}
                         className="flex items-center space-x-4 p-2 hover:bg-gray-100 rounded cursor-pointer"
