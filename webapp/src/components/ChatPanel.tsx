@@ -104,12 +104,16 @@ export default function ChatPanel({ onImageGenerated, onImageEdited, currentImag
         e.preventDefault()
         if (isGenerating) return
 
+        setMessages(prev => [...prev, {
+            id: String(Date.now()),
+            role: "user",
+            content: input
+        }])
+
         if (input.toLowerCase().startsWith('generate:')) {
             await handleGenerateImage(input.slice(9).trim())
-        } else if (input.toLowerCase().startsWith('edit:')) {
-            await handleEditImage(input.slice(5).trim())
         } else {
-            handleSubmit(e)
+            await handleEditImage(input.slice(5).trim())
         }
     }
 
