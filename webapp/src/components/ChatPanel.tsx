@@ -113,7 +113,7 @@ export default function ChatPanel({ onImageGenerated, onImageEdited, currentImag
         if (input.toLowerCase().startsWith('generate:')) {
             await handleGenerateImage(input.slice(9).trim())
         } else {
-            await handleEditImage(input.slice(5).trim())
+            await handleEditImage(input.trim())
         }
     }
 
