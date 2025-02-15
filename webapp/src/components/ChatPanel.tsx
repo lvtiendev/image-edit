@@ -12,7 +12,7 @@ interface ChatPanelProps {
     currentImage: string | null
 }
 
-const API_URL = 'http://localhost:8000' // Add this to your env variables in production
+const API_URL = process.env.NEXT_PUBLIC_IMAGE_SERVER_URL || 'http://localhost:8000'
 
 export default function ChatPanel({ onImageGenerated, onImageEdited, currentImage }: ChatPanelProps) {
     const [isGenerating, setIsGenerating] = useState(false)

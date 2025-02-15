@@ -7,13 +7,12 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ADD . /app
 WORKDIR /app
-COPY pyproject.toml .
-
-RUN python3 -m venv .venv
-RUN .venv/bin/python3 -m pip install uv
-
-COPY . .
 
 # Use the virtual environment's Python and uvicorn
-CMD ["/app/.venv/bin/uv", "run", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN uv sync --frozen
+
+CMD ["uv", "run", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
