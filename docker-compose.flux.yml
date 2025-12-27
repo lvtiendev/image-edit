@@ -9,7 +9,7 @@ services:
       - .env
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
-      - MODEL_TYPE=${MODEL_TYPE:-stable-diffusion}
+      - MODEL_TYPE=flux # Using Flux model
       - HF_TOKEN=${HF_TOKEN}
       - DEVICE_MAP=${DEVICE_MAP:-balanced}
       - QUANTIZATION=${QUANTIZATION:-8bit}

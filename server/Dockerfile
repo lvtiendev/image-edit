@@ -15,4 +15,7 @@ WORKDIR /app
 # Use the virtual environment's Python and uvicorn
 RUN uv sync --frozen
 
-CMD ["uv", "run", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Set default MODEL_TYPE if not provided
+ENV MODEL_TYPE=stable-diffusion
+
+CMD ["uv", "run", "python", "server.py"]

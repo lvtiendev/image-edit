@@ -1,0 +1,7 @@
+# Example override file for different model configurations
+# Copy this file to docker-compose.override.yml and modify as needed
+
+services:
+  server:
+    environment:
+      - MODEL_TYPE=flux  # Change to 'stable-diffusion' or 'flux'
