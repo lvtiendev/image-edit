@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from diffusers import (
     StableDiffusionPipeline,
     StableDiffusionImg2ImgPipeline,
+    StableDiffusion3Pipeline,
+    StableDiffusion3Img2ImgPipeline,
     FluxPipeline,
     FluxImg2ImgPipeline,
 )
@@ -199,7 +201,9 @@ def init_models():
             quant_bits = "8-bit" if quantization.get("load_in_8bit") else "4-bit"
             print(f"Using {quant_bits} quantization to reduce memory usage")
         else:
-            flux_kwargs["torch_dtype"] = torch.float16 if device == "cuda" else torch.float32
+            flux_kwargs["torch_dtype"] = (
+                torch.float16 if device == "cuda" else torch.float32
+            )
 
         # Add device mapping for multi-GPU
         if device == "cuda" and device_map:
@@ -208,26 +212,27 @@ def init_models():
                 flux_kwargs["max_memory"] = max_memory
 
             quant_info = f" with {quant_bits} quantization" if quantization else ""
-            print(f"Loading Flux text-to-image model with multi-GPU{quant_info} support...")
+            print(
+                f"Loading Flux text-to-image model with multi-GPU{quant_info} support..."
+            )
             print("Note: img2img pipeline will be loaded on first edit request")
         else:
             print(f"Loading Flux text-to-image model on single {device}...")
             print("Note: img2img pipeline will be loaded on first edit request")
 
         # Only load text2img at startup for better memory management
-        text2img_pipe = FluxPipeline.from_pretrained(
-            flux_model_id,
-            **flux_kwargs
-        )
+        text2img_pipe = FluxPipeline.from_pretrained(flux_model_id, **flux_kwargs)
 
         # No need to call .to() when using device_map or quantization
         # (both handle device placement automatically)
 
-        print("Flux text-to-image model loaded successfully with reduced memory footprint")
+        print(
+            "Flux text-to-image model loaded successfully with reduced memory footprint"
+        )
 
     else:  # stable-diffusion
         # Initialize Stable Diffusion text-to-image model only (img2img will be lazy-loaded)
-        sd_model_id = "stabilityai/stable-diffusion-2-1"
+        sd_model_id = "stabilityai/stable-diffusion-3.5-medium"
 
         # Common kwargs for model loading
         sd_kwargs = {
@@ -240,16 +245,17 @@ def init_models():
             sd_kwargs["device_map"] = device_map
             if max_memory:
                 sd_kwargs["max_memory"] = max_memory
-            print("Loading Stable Diffusion text-to-image model with multi-GPU support...")
+            print(
+                "Loading Stable Diffusion text-to-image model with multi-GPU support..."
+            )
             print("Note: img2img pipeline will be loaded on first edit request")
         else:
             print(f"Loading Stable Diffusion text-to-image model on single {device}...")
             print("Note: img2img pipeline will be loaded on first edit request")
 
         # Only load text2img at startup for better memory management
-        text2img_pipe = StableDiffusionPipeline.from_pretrained(
-            sd_model_id,
-            **sd_kwargs
+        text2img_pipe = StableDiffusion3Pipeline.from_pretrained(
+            sd_model_id, **sd_kwargs
         )
 
         if not (device == "cuda" and device_map):
@@ -259,7 +265,9 @@ def init_models():
         if device == "cuda":
             if not device_map:
                 text2img_pipe.enable_attention_slicing()
-                print("Stable Diffusion text-to-image model optimized with attention slicing")
+                print(
+                    "Stable Diffusion text-to-image model optimized with attention slicing"
+                )
 
     print(f"{SELECTED_MODEL.title()} model loaded successfully!")
 
@@ -275,9 +283,9 @@ def load_img2img_pipeline():
     if img2img_pipe is not None:
         return
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("First edit request detected - loading img2img pipeline...")
-    print("="*60)
+    print("=" * 60)
 
     # Check if CUDA is available
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -305,7 +313,9 @@ def load_img2img_pipeline():
             flux_kwargs.update(quantization)
             quant_bits = "8-bit" if quantization.get("load_in_8bit") else "4-bit"
         else:
-            flux_kwargs["torch_dtype"] = torch.float16 if device == "cuda" else torch.float32
+            flux_kwargs["torch_dtype"] = (
+                torch.float16 if device == "cuda" else torch.float32
+            )
 
         # Add device mapping for multi-GPU
         if device == "cuda" and device_map:
@@ -313,14 +323,13 @@ def load_img2img_pipeline():
             if max_memory:
                 flux_kwargs["max_memory"] = max_memory
             quant_info = f" with {quant_bits} quantization" if quantization else ""
-            print(f"Loading Flux img2img pipeline with multi-GPU{quant_info} support...")
+            print(
+                f"Loading Flux img2img pipeline with multi-GPU{quant_info} support..."
+            )
         else:
             print(f"Loading Flux img2img pipeline on single {device}...")
 
-        img2img_pipe = FluxImg2ImgPipeline.from_pretrained(
-            flux_model_id,
-            **flux_kwargs
-        )
+        img2img_pipe = FluxImg2ImgPipeline.from_pretrained(flux_model_id, **flux_kwargs)
 
         # No need to call .to() when using device_map or quantization
         # (both handle device placement automatically)
@@ -328,7 +337,7 @@ def load_img2img_pipeline():
         print("Flux img2img pipeline loaded successfully with reduced memory footprint")
 
     else:  # stable-diffusion
-        sd_model_id = "stabilityai/stable-diffusion-2-1"
+        sd_model_id = "stabilityai/stable-diffusion-3.5-medium"
 
         # Common kwargs for model loading
         sd_kwargs = {
@@ -345,9 +354,8 @@ def load_img2img_pipeline():
         else:
             print(f"Loading Stable Diffusion img2img pipeline on single {device}...")
 
-        img2img_pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
-            sd_model_id,
-            **sd_kwargs
+        img2img_pipe = StableDiffusion3Img2ImgPipeline.from_pretrained(
+            sd_model_id, **sd_kwargs
         )
 
         if not (device == "cuda" and device_map):
@@ -360,7 +368,7 @@ def load_img2img_pipeline():
 
     print(f"{current_model_type.title()} img2img pipeline loaded successfully!")
     print("Both pipelines are now ready. Subsequent edits will be fast.")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 @app.on_event("startup")
@@ -381,20 +389,12 @@ async def generate_image(request: GenerationRequest):
             raise HTTPException(status_code=500, detail="Model not loaded")
 
         # Use the loaded model based on current_model_type
-        if current_model_type == "flux":
-            # Flux doesn't support negative_prompt
-            image = text2img_pipe(
-                prompt=request.prompt,
-                num_inference_steps=request.num_inference_steps,
-                guidance_scale=request.guidance_scale,
-            ).images[0]
-        else:  # stable-diffusion
-            image = text2img_pipe(
-                prompt=request.prompt,
-                negative_prompt=request.negative_prompt,
-                num_inference_steps=request.num_inference_steps,
-                guidance_scale=request.guidance_scale,
-            ).images[0]
+        # Note: Neither Flux nor SD 3.5 support negative_prompt
+        image = text2img_pipe(
+            prompt=request.prompt,
+            num_inference_steps=request.num_inference_steps,
+            guidance_scale=request.guidance_scale,
+        ).images[0]
 
         return {
             "status": "success",
@@ -436,25 +436,14 @@ Parameters received:
         init_image = Image.open(io.BytesIO(contents)).convert("RGB")
 
         # Use the loaded model based on current_model_type
-        if current_model_type == "flux":
-            # Generate the edited image using Flux
-            result = img2img_pipe(
-                prompt=prompt,
-                image=init_image,
-                strength=strength,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale,
-            ).images[0]
-        else:  # stable-diffusion
-            # Generate the edited image using Stable Diffusion
-            result = img2img_pipe(
-                prompt=prompt,
-                image=init_image,
-                negative_prompt=negative_prompt,
-                strength=strength,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale,
-            ).images[0]
+        # Note: Neither Flux nor SD 3.5 support negative_prompt
+        result = img2img_pipe(
+            prompt=prompt,
+            image=init_image,
+            strength=strength,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+        ).images[0]
 
         return {
             "status": "success",
@@ -481,11 +470,11 @@ async def get_available_models():
     model_info = {
         "name": current_model_type,
         "display_name": (
-            "Stable Diffusion 2.1"
+            "Stable Diffusion 3.5 Medium"
             if current_model_type == "stable-diffusion"
             else "FLUX.1 Dev"
         ),
-        "supports_negative_prompt": current_model_type == "stable-diffusion",
+        "supports_negative_prompt": False,  # SD 3.5 doesn't support negative prompts
         "loaded": text2img_pipe is not None and img2img_pipe is not None,
     }
 

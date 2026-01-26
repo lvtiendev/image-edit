@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    volumes:
+      - hf_cache:/root/.cache/huggingface  # Isolated Docker volume (safer)
     env_file:
       - .env
     environment:
@@ -37,3 +39,6 @@ services:
     command: yarn dev
     depends_on:
       - server
+
+volumes:
+  hf_cache:  # Isolated cache - safer than host mount
