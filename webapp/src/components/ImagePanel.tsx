@@ -19,7 +19,7 @@ export default function ImagePanel({ currentImage, onImageUploaded }: ImagePanel
         // Add data URL prefix if it doesn't exist
         return cleanString.startsWith('data:image')
             ? cleanString
-            : `data:image/jpeg;base64,${cleanString}`
+            : `data:image/png;base64,${cleanString}`
     }
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -14,6 +14,7 @@ import io
 import base64
 import os
 import sys
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import Optional, Literal
 
@@ -146,13 +147,25 @@ def get_hf_token():
 SELECTED_MODEL = get_model_type()
 print(f"Selected model: {SELECTED_MODEL}")
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_models()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
+# CORS: set CORS_ORIGINS (comma-separated) to enable credentials for
+# specific origins. Without it, fall back to a public wildcard without
+# credentials (a wildcard origin with credentials is invalid per the spec).
+_cors_env = os.environ.get("CORS_ORIGINS", "")
+cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Modify this in production
-    allow_credentials=True,
+    allow_origins=cors_origins or ["*"],
+    allow_credentials=bool(cors_origins),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -401,11 +414,6 @@ def _load_img2img_pipeline_independent():
     print("=" * 60 + "\n")
 
 
-@app.on_event("startup")
-async def startup_event():
-    init_models()
-
-
 def image_to_base64(image: Image.Image) -> str:
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
@@ -442,7 +450,7 @@ async def edit_image(
     strength: float = Form(0.75),
     num_inference_steps: int = Form(50),
     guidance_scale: float = Form(7.5),
-    negative_prompt: str = Form(None),
+    negative_prompt: Optional[str] = Form(None),
 ):
     print(
         f"""
